@@ -1,0 +1,5 @@
+{
+  "appId": "com.yourname.spo2monitor",
+  "appName": "SpO2Monitor",
+  "webDir": "dist"
+}

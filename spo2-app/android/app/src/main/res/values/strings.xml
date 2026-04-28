@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SpO2Monitor</string>
+    <string name="title_activity_main">SpO2Monitor</string>
+    <string name="package_name">com.yourname.spo2monitor</string>
+    <string name="custom_url_scheme">com.yourname.spo2monitor</string>
+</resources>

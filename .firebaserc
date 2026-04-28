@@ -1,0 +1,5 @@
+{
+  "projects": {
+    "default": "iot-spo2-esp32-max30100"
+  }
+}

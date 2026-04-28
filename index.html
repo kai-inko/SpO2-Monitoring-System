@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpO2 & BPM Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        h1 { color: #333; }
+        .data { font-size: 24px; font-weight: bold; margin: 20px 0; color: #d9534f; }
+        #status { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Health Monitor</h1>
+        <button id="connectBtn">Connect Bluetooth</button>
+        <br><br>
+            <a href="/SpO2Monitor.apk" download>
+                <button style="background-color: #28a745;">Download Android App (.apk)</button>
+            </a>
+        <div class="data">Heart Rate: <span id="bpmDisplay">--</span> BPM</div>
+        <div class="data">SpO2: <span id="spo2Display">--</span> %</div>
+        <p id="status">Status: Disconnected</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+        // 1. Firebase Configuration (Replace with your details)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIxl-4E5M4hiTQPMsh28EBywKqCPi5iRw",
+            authDomain: "iot-spo2-esp32-max30100.firebaseapp.com",
+            databaseURL: "https://iot-spo2-esp32-max30100-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "iot-spo2-esp32-max30100",
+            storageBucket: "iot-spo2-esp32-max30100.firebasestorage.app",
+            messagingSenderId: "552247878953",
+            appId: "1:552247878953:web:161b372e1122d098e84338"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // 2. BLE UUIDs
+        const bleServiceUUID = '19b10000-e8f2-537e-4f6c-d104768a1214'; 
+        const bpmCharacteristicUUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+        const spo2CharacteristicUUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
+
+        const statusText = document.getElementById('status');
+
+        // 3. Connect and Retrieve
+        async function connectAndRetrieveData() {
+            try {
+                statusText.innerText = 'Status: Requesting Bluetooth Device...';
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'ESP32' }], 
+                    optionalServices: [bleServiceUUID]
+                });
+
+                statusText.innerText = 'Status: Connecting to Server...';
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(bleServiceUUID);
+
+                const bpmCharacteristic = await service.getCharacteristic(bpmCharacteristicUUID);
+                const spo2Characteristic = await service.getCharacteristic(spo2CharacteristicUUID);
+
+                // Listen for BPM
+                await bpmCharacteristic.startNotifications();
+                bpmCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const currentBpm = event.target.value.getUint8(0);
+                    document.getElementById('bpmDisplay').innerText = currentBpm;
+                    storeInFirebase('heart_rate_history', currentBpm);
+                });
+
+                // Listen for SpO2
+                await spo2Characteristic.startNotifications();
+                spo2Characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const currentSpo2 = event.target.value.getUint8(0);
+                    document.getElementById('spo2Display').innerText = currentSpo2;
+                    storeInFirebase('spo2_history', currentSpo2);
+                });
+
+                // Listen for BPM Notifications
+                await BleClient.startNotifications(
+                    device.deviceId,
+                    bleServiceUUID,
+                    bpmCharacteristicUUID,
+                    (value) => {
+                        const currentBpm = value.getUint8(0);
+                        console.log("-> Bluetooth Received BPM: ", currentBpm); // NEW LOG
+                        document.getElementById('bpmDisplay').innerText = currentBpm;
+                        storeInFirebase('heart_rate_history', currentBpm);
+                    }
+                );
+
+                // Listen for SpO2 Notifications
+                await BleClient.startNotifications(
+                    device.deviceId,
+                    bleServiceUUID,
+                    spo2CharacteristicUUID,
+                    (value) => {
+                        const currentSpo2 = value.getUint8(0);
+                        console.log("-> Bluetooth Received SpO2: ", currentSpo2); // NEW LOG
+                        document.getElementById('spo2Display').innerText = currentSpo2;
+                        storeInFirebase('spo2_history', currentSpo2);
+                    }
+                );
+
+                statusText.innerText = 'Status: Connected & Receiving Data';
+
+            } catch (error) {
+                console.error("Bluetooth connection failed: ", error);
+                statusText.innerText = 'Status: Connection Failed. See Console.';
+            }
+        }
+
+        // 4. Store in Firebase (UPDATED WITH LOGS)
+        function storeInFirebase(metricType, value) {
+            console.log(`Attempting to send ${metricType} to Firebase...`);
+            
+            const dataPathRef = ref(database, 'health_data/' + metricType);
+            const newRecordRef = push(dataPathRef);
+            
+            set(newRecordRef, {
+                reading: value,
+                timestamp: new Date().toISOString()
+            }).then(() => {
+                console.log(`SUCCESS: ${metricType} saved to Firebase Database!`);
+            }).catch((error) => {
+                console.error(`FIREBASE ERROR: Failed to save ${metricType}! Reason: `, error);
+            });
+        }
+
+        // 5. Attach listener to button
+        document.getElementById('connectBtn').addEventListener('click', connectAndRetrieveData);
+    </script>
+</body>
+</html>

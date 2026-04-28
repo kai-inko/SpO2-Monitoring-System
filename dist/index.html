@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpO2 & BPM Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        h1 { color: #333; }
+        .data { font-size: 24px; font-weight: bold; margin: 20px 0; color: #d9534f; }
+        #status { color: #666; font-style: italic; }
+    </style>
+  <script type="module" crossorigin src="/assets/index-DkkfCNOc.js"></script>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Health Monitor</h1>
+        <button id="connectBtn">Connect Bluetooth</button>
+        <br><br>
+            <a href="/SpO2Monitor.apk" download>
+                <button style="background-color: #28a745;">Download Android App (.apk)</button>
+            </a>
+        <div class="data">Heart Rate: <span id="bpmDisplay">--</span> BPM</div>
+        <div class="data">SpO2: <span id="spo2Display">--</span> %</div>
+        <p id="status">Status: Disconnected</p>
+    </div>
+
+</body>
+</html>
