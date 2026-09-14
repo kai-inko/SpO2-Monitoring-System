@@ -1,3 +1,14 @@
-# Old repository.
+# ECG Monitoring Website, Firebase and more
 
-For a better version of this, check https://github.com/kai-inko/ecg-monitor
+Function:
+- Live ECG Display
+- Patient Information Insert Panel
+- Historical Data Viewer
+- Real-time Database
+
+Extra components:
+- Email + Password Authentication
+- Cloud Hosting
+- Mobile APK App
+- BLE Communication
+
