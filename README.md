@@ -1,4 +1,4 @@
-# ECG Monitoring Website, Firebase and more
+# ECG/Sp02 Monitoring System, Website, and more
 
 Function:
 - Live ECG Display
