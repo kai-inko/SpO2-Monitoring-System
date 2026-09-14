@@ -1,4 +1,4 @@
-# ECG/Sp02 Monitoring System, Website, and more
+# ECG/SpO2 Monitoring System, Website, and more
 
 Function:
 - Live ECG Display
