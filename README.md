@@ -12,3 +12,4 @@ Extra components:
 - Mobile APK App
 - BLE Communication
 
+This is part 2 of the app, part 1: https://github.com/kai-inko/ecg-monitor
